@@ -1,3 +1,39 @@
+# Multi_TS: G20 Stock Indices
+
+BIST = pd.read_csv("Datasets/00_Benchmarks/G20_Indices/BIST 100 Historical Data (Turkey).csv")
+Bovespa = pd.read_csv("Datasets/00_Benchmarks/G20_Indices/Bovespa Historical Data (Brazil).csv")
+CAC = pd.read_csv("Datasets/00_Benchmarks/G20_Indices/CAC 40 Historical Data (France).csv")
+DAX = pd.read_csv("Datasets/00_Benchmarks/G20_Indices/DAX Historical Data (German).csv")
+FTSE_100 = pd.read_csv("Datasets/00_Benchmarks/G20_Indices/FTSE 100 Historical Data (British).csv")
+FTSE_China_A50 = pd.read_csv("Datasets/00_Benchmarks/G20_Indices/FTSE China A50 Historical Data (China).csv")
+FTSE_MIB = pd.read_csv("Datasets/00_Benchmarks/G20_Indices/FTSE Italia Mid Cap Historical Data (Italia).csv")
+FTSE_JSE = pd.read_csv("Datasets/00_Benchmarks/G20_Indices/FTSE_JSE Top 40 Historical Data (South Africa).csv")
+GSPC = pd.read_csv("Datasets/00_Benchmarks/G20_Indices/GSPC (US).csv")
+Euro = pd.read_csv("Datasets/00_Benchmarks/G20_Indices/Investing.com Euro Index Historical Data (Euro).csv")
+Jakarta = pd.read_csv("Datasets/00_Benchmarks/G20_Indices/Jakarta Stock Exchange Composite Index Historical Data (Indonesia).csv")
+KOSPI_50 = pd.read_csv("Datasets/00_Benchmarks/G20_Indices/KOSPI 50 Historical Data (Korea).csv")
+Merval = pd.read_csv("Datasets/00_Benchmarks/G20_Indices/Merval Historical Data (Agentina).csv")
+Nifty = pd.read_csv("Datasets/00_Benchmarks/G20_Indices/Nifty 50 Historical Data (India).csv")
+Nikkei = pd.read_csv("Datasets/00_Benchmarks/G20_Indices/Nikkei 225 Historical Data (Japan).csv")
+RTSI = pd.read_csv("Datasets/00_Benchmarks/G20_Indices/RTSI Historical Data (Russia).csv")
+SP_ASX = pd.read_csv("Datasets/00_Benchmarks/G20_Indices/S&P_ASX 200 Historical Data (Australia).csv")
+SP_BMV = pd.read_csv("Datasets/00_Benchmarks/G20_Indices/S&P_BMV IPC Historical Data (Mexico).csv")
+SP_TSX = pd.read_csv("Datasets/00_Benchmarks/G20_Indices/S&P_TSX Composite Historical Data (Canada).csv")
+Tadawul = pd.read_csv("Datasets/00_Benchmarks/G20_Indices/Tadawul All Share Historical Data (Saudi).csv")
+
+url_list = ["Datasets/00_Benchmarks/G20_Indices/S&P_ASX 200 Historical Data (Australia).csv",
+           "Datasets/00_Benchmarks/G20_Indices/FTSE 100 Historical Data (British).csv",
+            # "Datasets/00_Benchmarks/G20_Indices/GSPC (US).csv",
+            "Datasets/00_Benchmarks/G20_Indices/KOSPI 50 Historical Data (Korea).csv",
+            "Datasets/00_Benchmarks/G20_Indices/RTSI Historical Data (Russia).csv"
+           ]
+
+df = get_mul_var_data(url_list)
+df.fillna(0, inplace=True)
+data = np.array(df)
+
+print("data.shape", data.shape)
+
 examples = 30
 y_examples = 1
 
