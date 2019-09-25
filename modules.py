@@ -81,9 +81,9 @@ class LSTM_cell(torch.nn.modules.rnn.RNNBase):
          
         self.init_weights()
         
-        self.p_act_layer_1 = p_act_layer_all(hidden_sz, layer_type) 
-        self.p_act_layer_2 = p_act_layer_all(hidden_sz, layer_type)
-        self.p_act_layer_3 = p_act_layer_all(hidden_sz, layer_type)
+        self.p_act_layer_1 = p_act_layer_sig_tanh(hidden_sz, layer_type) 
+        self.p_act_layer_2 = p_act_layer_sig_tanh(hidden_sz, layer_type)
+        self.p_act_layer_3 = p_act_layer_sig_tanh(hidden_sz, layer_type)
      
     def init_weights(self):
         for p in self.parameters():
