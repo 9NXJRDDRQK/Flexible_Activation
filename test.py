@@ -1,3 +1,29 @@
+examples = 30
+y_examples = 1
+
+args = {"model_code":"DL_TS_LSTM","examples":examples, "y_examples":y_examples, "layer_size":[4,8], 
+        "num_outputs": 1, "reg1": 0.0, "reg2": 0.0, "act": "linear", "drop": 0.5, "epochs": 30, "reg_lam":0,
+      "batch_size":50, "loss":"mse", "optimizer": "SGD", "learning_rate": 0.01, "rho":0.9, "momentum": 0.9, 
+        "beta_1":0.9, "beta_2":0.999, "decay":0.0, "schedule_decay":0.004, "early_stopping":False}
+
+args["dataset"] = "mul_stocks"
+args["patience"] = 7
+args["new_acts"] = False
+
+args["num_outputs"] = 1
+args["reg_class"] = "reg"
+args["layer_size"] = [5, 16]
+input_mat, target_mat = data_process_TS(data, examples, y_examples)
+    
+input_mat_train, input_mat_test =  split(input_mat, 0.8)
+target_mat_train, target_mat_test =  split(target_mat, 0.8)
+
+input_mat_train, input_mat_val =  split(input_mat_train, 0.8)
+target_mat_train, target_mat_val =  split(target_mat_train, 0.8)
+
+train_X, train_Y, val_X, val_Y, test_X, test_Y = input_mat_train, target_mat_train, input_mat_val, target_mat_val, input_mat_test, target_mat_test
+
+
 args["learning rate"] = 0.019389 # [16, 16] 0.004322 # [16, 8] 0.019389 # [8,4,4] 0.003477 # [16] 0.00671 # 0.001419 # 0.01 #0.00135
 args["reg_lam"] =  0.0250 # 0.0250 # [16, 16] 0.00215766 # [16, 8] 0.00136  # [8, 4 ,4]0.0636 # [16] 0.042959
 args["patience"] = 50
