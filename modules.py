@@ -37,12 +37,6 @@ class LSTM(nn.Module):
             
             lstm_layer = self.lstm_layers[i]
             if self.new_acts == True or self.new_acts == "FSig_reg":
-                # print(len(lstm_layer(out, (h, c))))
-                # print("new_acts!!!")
-                # print("out.size()", out.size())
-                
-                # out, _ = lstm_layer(out, (h, c)) #, ind_first = self.ind_first)
-                # h, c = _
                 
                 # Use the following three lines instead when use NaiveLSTM_0
                 out, _, act_para, act_para_std = lstm_layer(out, (h, c)) #, ind_first = self.ind_first)
@@ -50,9 +44,7 @@ class LSTM(nn.Module):
                 act_para_std_list.append(act_para_std)
             else:
                 out, _ = lstm_layer(out, (h, c))
-        
-        # print("out.size: before fc", out.size())
-        # print("out[:, -1, :]", out[:, -1, :].size())
+       
         out = self.fc(out[:, -1, :])
         
         if self.new_acts == True or self.new_acts == "FSig_reg":
@@ -102,7 +94,6 @@ class LSTM_cell(torch.nn.modules.rnn.RNNBase):
          
     def forward(self, x, init_states, ind_first = False, return_type = "seq_tensor"):
     
-        # Assumes x is of shape (batch, sequence, feature)
         bs, seq_sz, _ = x.size()
         hidden_seq = []
         if init_states is None:
@@ -111,7 +102,6 @@ class LSTM_cell(torch.nn.modules.rnn.RNNBase):
             h_t, c_t = init_states
             
         x = x.type(torch.float32)
-        # print("x.size():after", x.size())
         h_t = h_t.type(torch.float32)
         c_t = c_t.type(torch.float32)
         
@@ -125,7 +115,162 @@ class LSTM_cell(torch.nn.modules.rnn.RNNBase):
             h_t = o_t * torch.tanh(c_t)
             hidden_seq.append(h_t.unsqueeze(Dim.batch))
         hidden_seq = torch.cat(hidden_seq, dim=Dim.batch)
-        # reshape from shape (sequence, batch, feature) to (batch, sequence, feature)
-        # hidden_seq = hidden_seq.transpose(Dim.batch, Dim.seq).contiguous()
+
         print("hidden_seq.size()", hidden_seq.size())
         return hidden_seq, (h_t, c_t)
+
+class autoencoder_1(nn.Module):
+    def __init__(self, args):
+        super(autoencoder_1, self).__init__()
+        self.flexible_act = args['flexible_act']
+        if self.flexible_act == True or self.flexible_act == "FReLu_reg":
+            print("FReLu")
+            self.p_act_layer_1 = p_act_layer(input_features = 36, args = args)
+            self.p_act_layer_2 = p_act_layer(input_features = 36, args = args)
+        elif self.flexible_act == "PReLu":
+            print("PReLu")
+            self.p_act_layer_1 = nn.PReLU()
+            self.p_act_layer_2 = nn.PReLU()
+        elif self.flexible_act == "PReLu_reg":
+            self.p_act_layer_1 = p_act_layer_prelu(64)
+            self.p_act_layer_2 = p_act_layer_prelu(64)
+        else:
+            print("False")
+            self.p_act_layer_1 = nn.ReLU(True)
+            self.p_act_layer_2 = nn.ReLU(True)
+        
+        self.noise = args["noise_level"]
+        self.encoder = nn.Sequential(
+            nn.Linear(28 * 28, 128),
+            nn.ReLU(True),
+            nn.Linear(128, 64),
+            nn.ReLU(True),            
+            nn.Linear(64, 36),
+            self.p_act_layer_1, 
+            nn.Linear(36, 12), 
+            nn.ReLU(True), 
+            nn.Linear(12, 6))
+        self.decoder = nn.Sequential(
+            nn.Linear(6, 12),
+            nn.ReLU(True),
+            nn.Linear(12, 36),
+            self.p_act_layer_2,             
+            nn.Linear(36, 64),
+            nn.ReLU(True),
+            nn.Linear(64, 128),
+            nn.ReLU(True), nn.Linear(128, 28 * 28), nn.Tanh())
+
+    def forward(self, x, x_n = None):
+        
+        if self.noise == None:
+            x = self.encoder(x)
+        else:
+            x = self.encoder(x_n)
+        x = self.decoder(x)
+        
+        return x
+    
+class autoencoder_2(nn.Module):
+    def __init__(self, args):
+        self.flexible_act = args['flexible_act']
+        super(autoencoder_2, self).__init__()
+
+        if self.flexible_act == True or self.flexible_act == "FTanh_reg":
+            # self.p_act_layer_1 = p_act_layer_all(input_features = 128, layer_type = "tanh_slope")
+            # self.p_act_layer_2 = p_act_layer_all(input_features = 64, layer_type = "tanh_slope")
+            self.p_act_layer_1 = p_act_layer_all(input_features = 12, layer_type = "tanh_slope")
+            self.p_act_layer_2 = p_act_layer_all(input_features = 12, layer_type = "tanh_slope")
+            # self.p_act_layer_5 = p_act_layer_all(input_features = 64, layer_type = "tanh_slope")
+            # self.p_act_layer_6 = p_act_layer_all(input_features = 128, layer_type = "tanh_slope")
+        else:
+            # self.p_act_layer_1 = nn.Tanh()
+            # self.p_act_layer_1 = nn.Tanh()
+            # self.p_act_layer_2 = nn.Tanh()
+            self.p_act_layer_1 = nn.Tanh()
+            self.p_act_layer_2 = nn.Tanh()
+            # self.p_act_layer_5 = nn.Tanh()
+            # self.p_act_layer_6 = nn.Tanh()
+        
+        self.encoder = nn.Sequential(
+            nn.Linear(28*28, 128),
+            nn.Tanh(),
+            # self.p_act_layer_1, 
+            nn.Linear(128, 64),
+            nn.Tanh(),
+            # self.p_act_layer_2, # 
+            nn.Linear(64, 12),
+            # nn.Tanh(),
+            self.p_act_layer_1, # 
+            nn.Linear(12, 3),   # compress to 3 features which can be visualized in plt
+        )
+        self.decoder = nn.Sequential(
+            nn.Linear(3, 12),
+            # nn.Tanh(),
+            self.p_act_layer_2, 
+            nn.Linear(12, 36),
+            nn.Tanh(),
+            nn.Linear(36, 64),
+            nn.Tanh(),
+            # self.p_act_layer_5, # nn.Tanh(),
+            nn.Linear(64, 128),
+            # nn.Tanh(),
+            # self.p_act_layer_6, # nn.Tanh(),
+            nn.Linear(128, 28*28),
+            nn.Sigmoid(),       # compress to a range (0, 1)
+        )
+
+    def forward(self, x):
+        
+        encoded = self.encoder(x)
+        decoded = self.decoder(encoded)
+        
+        # return encoded, decoded
+        return decoded
+    
+class LeNet(nn.Module):
+    def __init__(self, args):
+        super(LeNet, self).__init__()
+        self.new_acts = args["flexible_act"]
+        if args["dataset"] == "MNIST":
+            self.conv1 = nn.Conv2d(1, 6, 5)
+        if args["dataset"] == "CIFAR10":
+            self.conv1 = nn.Conv2d(3, 6, 5)
+        self.conv2 = nn.Conv2d(6, 16, 5)
+        self.fc1   = nn.Linear(16*5*5, 120)
+        self.fc2   = nn.Linear(120, 84)
+        self.fc3   = nn.Linear(84, 10)
+        self.bn_layers_1 = nn.BatchNorm1d(120)
+        self.bn_layers_2 = nn.BatchNorm1d(84)
+        
+        print("self.new_acts:", self.new_acts)
+        if self.new_acts == False:
+            print("False")
+            self.p_act_layer_1 = nn.ReLU()
+            self.p_act_layer_2 = nn.ReLU()
+        elif self.new_acts == "PReLu_reg":
+            print("PReLu_reg")
+            self.p_act_layer_1 = nn.ReLU()
+            self.p_act_layer_2 = p_act_layer_prelu(84) #  nn.PReLU() #
+        elif self.new_acts == "PReLu":
+            print("PReLu")
+            self.p_act_layer_1 = nn.ReLU()
+            self.p_act_layer_2 = nn.PReLU() #  nn.PReLU() #           
+        else:
+            print("new_act!")
+            self.p_act_layer_1 = nn.ReLU()
+            # self.p_act_layer_1 = p_act_layer(120, args)
+            self.p_act_layer_2 = p_act_layer(84, args)
+
+    def forward(self, x):
+        out = F.relu(self.conv1(x))
+        out = F.max_pool2d(out, 2)
+        out = F.relu(self.conv2(out))
+        out = F.max_pool2d(out, 2)
+        out = out.view(out.size(0), -1)
+        # out = F.relu(self.fc1(out))
+        # out = F.relu(self.fc2(out))
+        out = self.p_act_layer_1(self.bn_layers_1(self.fc1(out)))
+        out = self.p_act_layer_2(self.bn_layers_2(self.fc2(out)))
+    
+        out = self.fc3(out)
+        return out
