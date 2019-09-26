@@ -59,17 +59,11 @@ target_mat_train, target_mat_val =  split(target_mat_train, 0.8)
 
 train_X, train_Y, val_X, val_Y, test_X, test_Y = input_mat_train, target_mat_train, input_mat_val, target_mat_val, input_mat_test, target_mat_test
 
-
-args["learning rate"] = 0.019389 # [16, 16] 0.004322 # [16, 8] 0.019389 # [8,4,4] 0.003477 # [16] 0.00671 # 0.001419 # 0.01 #0.00135
-args["reg_lam"] =  0.0250 # 0.0250 # [16, 16] 0.00215766 # [16, 8] 0.00136  # [8, 4 ,4]0.0636 # [16] 0.042959
+args["learning rate"] = 0.019389 
+args["reg_lam"] =  0.0250 
 args["patience"] = 50
 args["epochs"] =  30
 args["layer_size"] = [4, 16]
-# args["seed"] = 147
-
-# reg_lam : [16] 0.03192, 0.0544, 0.7583
-# lr: [16, 16] 0.004322 # [16, 8] 0.019389 # [8,4,4] 0.003477 # [16] 0.00671
-
 args["layer_type"] = "sigmoid_slope"
 
 eva_list_1 = []
@@ -115,28 +109,3 @@ for i in range(50):
     eva_list_3.append(eva_3)
     val_losses_table_3.append(avg_valid_losses_3)
     
-
-datetime = strftime("%Y-%m-%d %H:%M:%S",gmtime())
-fn = datetime + "_f_act_lstm_sigmoid_ind_1" #+ str(val)
-# rows = zip(update_list, eva_list)
-# rows = zip(eva_list)
-rows = zip(eva_list_1, eva_list_2, eva_list_3)
-
-val_losses_list_1 = []
-val_losses_list_2 = []
-val_losses_list_3 = []
-
-for i in range(len(val_losses_table_1)):
-    val_losses_list_1 = val_losses_list_1 + val_losses_table_1[i]
-    val_losses_list_2 = val_losses_list_2 + val_losses_table_2[i]
-    val_losses_list_3 = val_losses_list_3 + val_losses_table_3[i]
-# print(val_losses_list)
-
-rows_1 = zip(val_losses_list_1, val_losses_list_2, val_losses_list_3)
-
-with open(fn, "w") as f:
-    writer = csv.writer(f)
-    for row in rows:
-        writer.writerow(row)
-    for row in rows_1:
-        writer.writerow(row)
