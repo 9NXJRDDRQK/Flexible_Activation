@@ -1,18 +1,16 @@
-def model_train_rnn(X_train, Y_train, X_val, Y_val, X_test, Y_test, HP):
+def model_train_rnn(X_train, Y_train, X_val, Y_val, X_test, Y_test, args):
 
-    learning_rate = HP["learning_rate"]
-    num_epochs = HP["epochs"]
-    batch_size = HP["batch_size"]
-    reg_lambda= HP["reg_lam"]
-    reg_class = HP["reg_class"]
-    patience = HP["patience"]
-    reg_model = 0 # HP["reg_model"]
+    learning_rate = args["learning_rate"]
+    num_epochs = args["epochs"]
+    batch_size = args["batch_size"]
+    reg_lambda= args["reg_lam"]
+    reg_class = args["reg_class"]
+    patience = args["patience"]
+    reg_model = 0 # args["reg_model"]
     
-    HP1 = copy.deepcopy(HP)
-    # print("HP1", HP1)
-    model = LSTM(HP1).to(device)
+    args_1 = copy.deepcopy(args)
+    model = LSTM(args_1).to(device)
     seed = random.randint(1,1000)
-    # seed = HP["seed"]
     update = False
 
     # Loss and optimizer
@@ -20,9 +18,7 @@ def model_train_rnn(X_train, Y_train, X_val, Y_val, X_test, Y_test, HP):
         criterion = nn.CrossEntropyLoss()
     if reg_class == "reg":
         criterion = nn.MSELoss()
-    
-    # optimizer = Adam(model.parameters(), lr=learning_rate, weight_decay= reg_model)  
-    
+
     optimizer = Adam(model.parameters(), lr=learning_rate)
     train_losses = []
     valid_losses = []
@@ -52,8 +48,6 @@ def model_train_rnn(X_train, Y_train, X_val, Y_val, X_test, Y_test, HP):
         for minibatch in minibatches:
 
             (mX, mY) = minibatch
-            # print("mX.shape, mY.shape", mX.shape, mY.shape)
-            
             mX = torch.tensor(mX).type(torch.FloatTensor)
             if reg_class == "reg":
                 mY = torch.tensor(mY).type(torch.FloatTensor)
@@ -62,10 +56,9 @@ def model_train_rnn(X_train, Y_train, X_val, Y_val, X_test, Y_test, HP):
                 
             mX = mX.to(device)
             mY = mY.to(device)
-            # print("mX, mY", mX.shape, mY.shape)
             
             # Forward pass
-            if HP["new_acts"] == True or HP["new_acts"] == "FSig_reg":
+            if args["new_acts"] == True or args["new_acts"] == "FSig_reg":
                 # print("new_acts!!!")
                 output, act_para_list, act_para_std_list = model(mX)
                 act_para_list_list.append(act_para_list)
@@ -84,10 +77,8 @@ def model_train_rnn(X_train, Y_train, X_val, Y_val, X_test, Y_test, HP):
             loss = criterion(output, mY)
             l2_reg = 0
     
-            #"""
             if HP["new_acts"] == "FSig_reg":
-                # print("FSig_reg!!!")
-                # print("loss_1:", loss)
+
                 for j in range(len(model.lstm_layers)):
                     l2_reg = l2_reg + torch.mean((model.lstm_layers[j].p_act_layer_1.a.data - 
                         torch.mean(model.lstm_layers[j].p_act_layer_1.a.data))**2 + 
@@ -105,8 +96,6 @@ def model_train_rnn(X_train, Y_train, X_val, Y_val, X_test, Y_test, HP):
                                              torch.mean(model.lstm_layers[j].p_act_layer_3.b.data))**2)
                 
                     loss = loss + l2_reg * reg_lambda
-                # print("loss_2:", loss)
-            #"""
       
             state_0 = optimizer.__getstate__()
             # Backward and optimize
@@ -115,9 +104,6 @@ def model_train_rnn(X_train, Y_train, X_val, Y_val, X_test, Y_test, HP):
             optimizer.step()
             
             state_1 = optimizer.__getstate__()
-            # print("state", state)
-            # optimizer.step()
-            # model_1 = copy.deepcopy(model)
             if (i+1) % 10 == 0:
                 print("epoch:", epoch, "i:", i, "loss:", loss.item())
             
@@ -135,7 +121,7 @@ def model_train_rnn(X_train, Y_train, X_val, Y_val, X_test, Y_test, HP):
                 
             mXv = mXv.to(device)
             mYv = mYv.to(device)
-            # print("mX, mY", mX.shape, mY)
+
             # Forward pass
             if HP["new_acts"] == True or HP["new_acts"] == "FSig_reg":
                 output, _, __ = model(mXv)
@@ -146,12 +132,8 @@ def model_train_rnn(X_train, Y_train, X_val, Y_val, X_test, Y_test, HP):
                 output = output.type(torch.FloatTensor).to(device)
             except:
                 output = output[0].type(torch.FloatTensor).to(device)
-            # output_final = output_list[-1]
-            # print("output_final, mY", output, mY)
-            # print("output", output[0], "mY", mY[0], "output - mY", output[0] - mY[0])
-            # print("output", output, "mY", mY)
-            loss = criterion(output, mYv)
-            
+
+            loss = criterion(output, mYv)            
             valid_losses.append(loss.item())
 
         # print training/validation statistics 
@@ -162,9 +144,7 @@ def model_train_rnn(X_train, Y_train, X_val, Y_val, X_test, Y_test, HP):
         avg_valid_losses.append(valid_loss)
         
         epoch_len = len(str(num_epochs))
-        
-        # print(print_msg)
-        
+
         # clear lists to track next epoch
         train_losses = []
         valid_losses = []
@@ -199,20 +179,15 @@ def model_train_rnn(X_train, Y_train, X_val, Y_val, X_test, Y_test, HP):
                 mXt = mXt.to(device)
                 mYt = mYt.to(device)
             
-                if HP["new_acts"] == True or HP["new_acts"] == "FSig_reg":
+                if args["new_acts"] == True or args["new_acts"] == "FSig_reg":
                     output, _, __ = model(mXt)
                 else:
                     output = model(mXt)
-                
-                # output = model(mXt)
-                # output = output.to(device)
-                
-                # print("output.shape, mYt.shape", output.shape, mYt.shape)
+
                 mloss = criterion(output, mYt)
                 loss_t = loss_t + mloss /len(minibatches_test) 
             
             eva = loss_t
-            # print("eva", eva)
         
         if reg_class == "class":
         
@@ -228,8 +203,7 @@ def model_train_rnn(X_train, Y_train, X_val, Y_val, X_test, Y_test, HP):
                 mXt = mXt.to(device)
                 mYt = mYt.to(device)
                 
-                # output = model(mXt)
-                if HP["new_acts"] == True or HP["new_acts"] == "FSig_reg":
+                if args["new_acts"] == True or args["new_acts"] == "FSig_reg":
                     output, _, __ = model(mXt)
                 else:
                     output = model(mXt)
@@ -250,9 +224,9 @@ def model_train_rnn(X_train, Y_train, X_val, Y_val, X_test, Y_test, HP):
     # Save the model checkpoint
     torch.save(model.state_dict(), 'model.ckpt')
 
-    if HP["new_acts"] == True or HP["new_acts"] == "FSig_reg":
+    if args["new_acts"] == True or args["new_acts"] == "FSig_reg":
         return eva, model, avg_train_losses, avg_valid_losses, time_list, act_para_list_list, act_para_std_list_list
-    if HP["new_acts"] == False:
+    if args["new_acts"] == False:
         return eva, model, avg_train_losses, avg_valid_losses, time_list
     
 def main_train_autoencoder(data, args):
@@ -324,44 +298,15 @@ def main_train_autoencoder(data, args):
             dev = 0
             
             if args["flexible_act"] == True or args["flexible_act"] == "FReLu_reg" or args["flexible_act"] == "FTanh_reg":
-                # print("flexible_act!")
-                
-                #"""
+
                 l2_reg += torch.sum((model.p_act_layer_1.a.data - torch.mean(model.p_act_layer_1.a.data))**2 
                        + (model.p_act_layer_1.b.data - torch.mean(model.p_act_layer_1.b.data))**2)
                 
                 l2_reg += torch.sum((model.p_act_layer_2.a.data - torch.mean(model.p_act_layer_2.a.data))**2 
                        + (model.p_act_layer_2.b.data - torch.mean(model.p_act_layer_2.b.data))**2)
                 
-                #"""
                 loss = loss + l2_reg * reg_lambda + reg_dev * dev
                 
-                
-                """
-                l2_reg += torch.sum((model.p_act_layer_1.a.data - torch.mean(model.p_act_layer_1.a.data))**2 
-                       + (model.p_act_layer_1.b.data - torch.mean(model.p_act_layer_1.b.data))**2)
-                
-                # print("torch.mean(model.p_act_layer_3.a.data, torch.mean(model.p_act_layer_3.b.data)", torch.mean(model.p_act_layer_3.a.data), torch.mean(model.p_act_layer_3.b.data))    
-                l2_reg += torch.sum((model.p_act_layer_2.a.data - torch.mean(model.p_act_layer_2.a.data))**2 
-                       + (model.p_act_layer_2.b.data - torch.mean(model.p_act_layer_2.b.data))**2)
-                
-                # print("torch.mean(model.p_act_layer_4.a.data, torch.mean(model.p_act_layer_4.b.data)", torch.mean(model.p_act_layer_4.a.data), torch.mean(model.p_act_layer_4.b.data))    
-                
-                # dev = (torch.mean(model.p_act_layer_1.a.data) - 1) ** 2 + (torch.mean(model.p_act_layer_2.a.data)-1) ** 2
-                
-                
-                
-                l2_reg += torch.sum((model.p_act_layer_5.a.data - torch.mean(model.p_act_layer_5.a.data))**2 
-                       + (model.p_act_layer_5.b.data - torch.mean(model.p_act_layer_5.b.data))**2)
-                
-                
-                l2_reg += torch.sum((model.p_act_layer_6.a.data - torch.mean(model.p_act_layer_6.a.data))**2 
-                       + (model.p_act_layer_6.b.data - torch.mean(model.p_act_layer_6.b.data))**2)
-                """
-                
-                # loss = loss + l2_reg * reg_lambda + reg_dev * dev
-            
-            # print("loss_1:", loss)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -394,14 +339,6 @@ def main_train_autoencoder(data, args):
         if early_stopping.early_stop:
             print("Early stopping")
             break
-        
-    """     
-        if epoch % 10 == 0:
-            pic = to_img(output.cpu().data)
-            save_image(pic, './mlp_img/image_{}.png'.format(epoch))
-
-    torch.save(model.state_dict(), './sim_autoencoder.pth')
-    """
     
     with torch.no_grad():
         
@@ -477,9 +414,7 @@ def model_train_cnn(data, args):
                 if dataset == "MNIST":
                     images = images.reshape(-1, 28*28).to(device)
                 if dataset == "CIFAR10":
-                    # print("images.shape", images.shape)
                     images = images.reshape(-1, 3*32*32).to(device)
-                    # print("images.shape", images.shape)
             if model_type == "LSTM":
                 images = images.reshape(-1, sequence_length, input_size).to(device)
                 # print("images.shape", images.shape)
@@ -488,7 +423,6 @@ def model_train_cnn(data, args):
             labels = labels.to(device)
             
             # Forward pass
-            # print("images.shape", images.shape)
             output = model(images)
             if model_type == "FFNN":
                 output = output[-1]
@@ -535,7 +469,6 @@ def model_train_cnn(data, args):
                    .format(epoch+1, num_epochs, i+1, total_step, loss.item()))
             
             train_losses.append(loss.item())
-        # avg_valid_losses.append(valid_loss)
         
         for i, (images, labels) in enumerate(val_loader):  
             
@@ -576,22 +509,6 @@ def model_train_cnn(data, args):
         
         epoch_len = len(str(num_epochs))
         
-        # print(print_msg)
-        
-        """
-        # clear lists to track next epoch
-        train_losses = []
-        valid_losses = []
-        
-        # early_stopping needs the validation loss to check if it has decresed, 
-        # and if it has, it will make a checkpoint of the current model
-        early_stopping(valid_loss, model)
-        
-        if early_stopping.early_stop:
-            print("Early stopping")
-            break
-        """
-    
         t = time.clock()-t0
         time_list.append(t)
         
