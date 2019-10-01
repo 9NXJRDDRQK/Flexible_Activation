@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.modules.rnn
 from enum import IntEnum
+import activations
 
 class LSTM(nn.Module):
     def __init__(self, args):
