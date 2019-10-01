@@ -1,5 +1,9 @@
-if not os.path.exists('Results/AE_DAE_VAE/mlp_img'):
-    os.mkdir('Results/AE_DAE_VAE/mlp_img')
+import train
+import modules
+import activations
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+torch.cuda.is_available()
 
 args = {"dataset": "MNIST", "model_type":"autoencoder_1", "batch_size":128, "num_epochs":50, "learning_rate":1e-3,
        "noise_level": None}
