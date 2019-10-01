@@ -1,3 +1,8 @@
+import torch
+import torch.nn as nn
+import torch.nn.modules.rnn
+from enum import IntEnum
+
 class LSTM(nn.Module):
     def __init__(self, args):
 
