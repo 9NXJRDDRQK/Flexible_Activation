@@ -1,3 +1,5 @@
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+torch.cuda.is_available()
 
 args_LeNet = {"model_type":"LeNet", "num_epochs":10, "batch_size":100, "learning_rate":0.0012}
 
