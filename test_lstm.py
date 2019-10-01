@@ -1,3 +1,10 @@
+import train
+import modules
+import activations
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+torch.cuda.is_available()
+
 # Multi_TS: G20 Stock Indices
 
 BIST = pd.read_csv("Datasets/00_Benchmarks/G20_Indices/BIST 100 Historical Data (Turkey).csv")
