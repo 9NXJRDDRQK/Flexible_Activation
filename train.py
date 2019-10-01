@@ -16,6 +16,9 @@ import matplotlib.pyplot as plt
 from time import gmtime, strftime
 from torch.autograd.variable import Variable
 
+import modules
+import activations
+
 def model_train_rnn(X_train, Y_train, X_val, Y_val, X_test, Y_test, args):
 
     learning_rate = args["learning_rate"]
