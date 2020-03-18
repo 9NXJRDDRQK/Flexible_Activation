@@ -4,6 +4,23 @@ from torch.autograd import *
 import torch.nn.functional as F
 from torch.autograd import *
 
+class p_act_layer_e2_relu(nn.Module):
+    
+    def __init__(self, input_features):
+        
+        super(p_act_layer_relu_elu, self).__init__()
+        self.input_features = input_features
+                
+        self.a = nn.Parameter(torch.Tensor(input_features))
+        self.b = nn.Parameter(torch.Tensor(input_features))
+
+        self.a.data = torch.tensor([0.4]*input_features, dtype = torch.float)
+        self.b.data = torch.tensor([0.3]*input_features, dtype = torch.float)
+
+    def forward(self, input):
+        # print("a", torch.mean(self.a))
+        return self.a * F.relu(input) + self.b * F.elu(input) - (1-self.a-self.b) * F.elu(-input)
+
 class para_act_relu(Function):
     
     @staticmethod
