@@ -1,6 +1,8 @@
 import train
 import modules
 import activations
+import utils
+from utils import *
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 torch.cuda.is_available()
