@@ -233,6 +233,169 @@ class autoencoder_2(nn.Module):
         # return encoded, decoded
         return decoded
     
+class conv_autoencoder(nn.Module):
+    def __init__(self, args):
+        super(conv_autoencoder, self).__init__()
+        print("conv_autoencoder")
+        self.noise = args["noise_level"]
+        self.flexible_act = args["flexible_act"]
+        
+        if self.flexible_act == True or self.flexible_act == "FReLu_reg":
+            print("FReLu")
+            self.p_act_layer_1 = p_act_layer(input_features = 3, args = args)
+            self.p_act_layer_2 = p_act_layer(input_features = 5, args = args)
+        elif self.flexible_act == "PReLu":
+            print("PReLu")
+            self.p_act_layer_1 = nn.PReLU()
+            self.p_act_layer_2 = nn.PReLU()
+            self.p_act_layer_3 = nn.PReLU()
+            self.p_act_layer_4 = nn.PReLU()
+        elif self.flexible_act == "PReLu_reg":
+            self.p_act_layer_1 = p_act_layer_prelu(12)
+            self.p_act_layer_2 = p_act_layer_prelu(12)
+            self.p_act_layer_3 = p_act_layer_prelu(12)
+            self.p_act_layer_4 = p_act_layer_prelu(12)
+        elif self.flexible_act == "Relu_Elu" or self.flexible_act == "Relu_Elu_reg" or self.flexible_act == "Relu_Elu_reg_1":
+            self.p_act_layer_1 = p_act_layer_relu_elu(input_features = 3)
+            self.p_act_layer_2 = p_act_layer_relu_elu(input_features = 5)
+            self.p_act_layer_3 = p_act_layer_relu_elu(input_features = 10)
+            self.p_act_layer_4 = p_act_layer_relu_elu(input_features = 15)
+        elif self.flexible_act == "Gelu":
+            print("Gelu")
+            self.p_act_layer_1 = GELU()
+            self.p_act_layer_2 = GELU()
+            self.p_act_layer_3 = GELU()
+            self.p_act_layer_4 = GELU()
+        elif self.flexible_act == "Elu":
+            print("Elu")
+            self.p_act_layer_1 = nn.ELU()
+            self.p_act_layer_2 = nn.ELU()
+            self.p_act_layer_3 = nn.ELU()
+            self.p_act_layer_4 = nn.ELU()
+        else:
+            print("False")
+            self.p_act_layer_1 = nn.ReLU(True)
+            self.p_act_layer_2 = nn.ReLU(True)
+            self.p_act_layer_3 = nn.ReLU(True)
+            self.p_act_layer_4 = nn.ReLU(True)
+            
+        if args["dataset"]=="CIFAR10":
+            dim = 3
+        if args["dataset"]=="MNIST" or args["dataset"]=="FMNIST":
+            dim = 1
+        
+        self.encoder = nn.Sequential(
+            nn.Conv2d(dim, 16, 3, stride=3, padding=1),  # b, 16, 10, 10
+            # nn.ReLU(True),
+            self.p_act_layer_3,
+            nn.MaxPool2d(2, stride=2),  # b, 16, 5, 5
+            nn.Conv2d(16, 8, 3, stride=2, padding=1),  # b, 8, 3, 3
+            # nn.ReLU(True),
+            self.p_act_layer_1,
+            nn.MaxPool2d(2, stride=1)  # b, 8, 2, 2
+        )
+        self.decoder = nn.Sequential(
+            nn.ConvTranspose2d(8, 16, 3, stride=2),  # b, 16, 5, 5
+            # nn.ReLU(True),
+            self.p_act_layer_2,
+            nn.ConvTranspose2d(16, 8, 5, stride=3, padding=1),  # b, 8, 15, 15
+            # nn.ReLU(True),
+            self.p_act_layer_4,
+            nn.ConvTranspose2d(8, dim, 2, stride=2, padding=1),  # b, 1, 28, 28
+            nn.Tanh()
+        )
+
+    def forward(self, x, x_n = None):
+        
+        if self.noise == None:
+            x = self.encoder(x)
+        else:
+            x = self.encoder(x_n)
+        x = self.decoder(x)
+        
+        return x
+    
+class conv_autoencoder_cifar(nn.Module):
+    def __init__(self, args):
+        super(conv_autoencoder_cifar, self).__init__()
+        print("conv_autoencoder_cifar")
+        self.flexible_act = args["flexible_act"]
+        if self.flexible_act == True or self.flexible_act == "FReLu_reg":
+            print("FReLu")
+            self.p_act_layer_1 = p_act_layer(input_features = 3, args = args)
+            self.p_act_layer_2 = p_act_layer(input_features = 5, args = args)
+        elif self.flexible_act == "PReLu":
+            print("PReLu")
+            self.p_act_layer_1 = nn.PReLU()
+            self.p_act_layer_2 = nn.PReLU()
+            self.p_act_layer_3 = nn.PReLU()
+            self.p_act_layer_4 = nn.PReLU()
+            self.p_act_layer_5 = nn.PReLU()
+            self.p_act_layer_6 = nn.PReLU()
+        elif self.flexible_act == "PReLu_reg":
+            self.p_act_layer_1 = p_act_layer_prelu(12)
+            self.p_act_layer_2 = p_act_layer_prelu(12)
+        elif self.flexible_act == "Relu_Elu" or self.flexible_act == "Relu_Elu_reg" or self.flexible_act == "Relu_Elu_reg_1":
+            self.p_act_layer_1 = p_act_layer_relu_elu(input_features = 16)
+            self.p_act_layer_2 = p_act_layer_relu_elu(input_features = 8)
+            self.p_act_layer_3 = p_act_layer_relu_elu(input_features = 4)
+            self.p_act_layer_4 = p_act_layer_relu_elu(input_features = 8)
+            self.p_act_layer_5 = p_act_layer_relu_elu(input_features = 16)
+            self.p_act_layer_6 = p_act_layer_relu_elu(input_features = 32)
+        elif self.flexible_act == "Gelu":
+            print("Gelu")
+            self.p_act_layer_1 = GELU()
+            self.p_act_layer_2 = GELU()
+            self.p_act_layer_3 = GELU()
+            self.p_act_layer_4 = GELU()
+            self.p_act_layer_5 = GELU()
+            self.p_act_layer_6 = GELU()
+        elif self.flexible_act == "Elu":
+            print("Elu")
+            self.p_act_layer_1 = nn.ELU()
+            self.p_act_layer_2 = nn.ELU()
+            self.p_act_layer_3 = nn.ELU()
+            self.p_act_layer_4 = nn.ELU()
+            self.p_act_layer_5 = nn.ELU()
+            self.p_act_layer_6 = nn.ELU()
+        else:
+            print("False")
+            self.p_act_layer_1 = nn.ReLU(True)
+            self.p_act_layer_2 = nn.ReLU(True)
+            self.p_act_layer_3 = nn.ReLU(True)
+            self.p_act_layer_4 = nn.ReLU(True)
+            self.p_act_layer_5 = nn.ReLU(True)
+            self.p_act_layer_6 = nn.ReLU(True)
+            
+        self.encoder = nn.Sequential(
+            nn.Conv2d(3, 12, 4, stride=2, padding=1),            # [batch, 12, 16, 16]
+            # nn.ReLU(),
+            self.p_act_layer_1,
+            nn.Conv2d(12, 24, 4, stride=2, padding=1),           # [batch, 24, 8, 8]
+            # nn.ReLU(),
+            self.p_act_layer_2,
+            nn.Conv2d(24, 48, 4, stride=2, padding=1),           # [batch, 48, 4, 4]
+            self.p_act_layer_3,
+            nn.ReLU(),
+        )
+        self.decoder = nn.Sequential(
+            nn.ConvTranspose2d(48, 24, 4, stride=2, padding=1),  # [batch, 24, 8, 8]
+            nn.ReLU(),
+            self.p_act_layer_4,
+            nn.ConvTranspose2d(24, 12, 4, stride=2, padding=1),  # [batch, 12, 16, 16]
+            nn.ReLU(),
+            self.p_act_layer_5,
+            nn.ConvTranspose2d(12, 3, 4, stride=2, padding=1),   # [batch, 3, 32, 32]
+            self.p_act_layer_6,
+            # nn.Sigmoid(),
+        )
+
+    def forward(self, x):
+        encoded = self.encoder(x)
+        decoded = self.decoder(encoded)
+        return decoded
+    
+    
 class LeNet(nn.Module):
     def __init__(self, args):
         super(LeNet, self).__init__()
